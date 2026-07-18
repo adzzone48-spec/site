@@ -410,41 +410,10 @@
     <div class="sec-head">
       <div class="sec-tc mono">00:16 — TRABALHOS</div>
       <h2 class="sec-title">Últimos cortes</h2>
-      <p class="sec-sub">Uma seleção de peças recentes. Troque as miniaturas abaixo pelos seus próprios vídeos/thumbnails.</p>
+      <p class="sec-sub">Uma seleção de peças recentes — carregadas automaticamente da pasta <span class="mono" style="color:var(--cyan)">videos</span>.</p>
     </div>
-    <div class="work-grid">
-      <div class="clip">
-        <div class="clip-thumb">
-          <video src="videos/work-01.mp4" poster="videos/work-01.jpg" preload="metadata" playsinline muted loop controls></video>
-          <div class="clip-dur mono">00:36</div>
-          <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
-        </div>
-        <div class="clip-info"><div class="clip-tag mono">GAMEPLAY</div><div class="clip-title">Edição de highlights</div></div>
-      </div>
-      <div class="clip">
-        <div class="clip-thumb">
-          <video src="videos/work-02.mp4" poster="videos/work-02.jpg" preload="metadata" playsinline muted loop controls></video>
-          <div class="clip-dur mono">00:19</div>
-          <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
-        </div>
-        <div class="clip-info"><div class="clip-tag mono">CLIPE</div><div class="clip-title">Corte rápido</div></div>
-      </div>
-      <div class="clip">
-        <div class="clip-thumb">
-          <video src="videos/work-03.mp4" poster="videos/work-03.jpg" preload="metadata" playsinline muted loop controls></video>
-          <div class="clip-dur mono">00:22</div>
-          <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
-        </div>
-        <div class="clip-info"><div class="clip-tag mono">GAMEPLAY</div><div class="clip-title">Momento decisivo</div></div>
-      </div>
-      <div class="clip">
-        <div class="clip-thumb">
-          <video src="videos/work-04.mp4" poster="videos/work-04.jpg" preload="metadata" playsinline muted loop controls></video>
-          <div class="clip-dur mono">00:27</div>
-          <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
-        </div>
-        <div class="clip-info"><div class="clip-tag mono">GAMEPLAY</div><div class="clip-title">Sequência de ação</div></div>
-      </div>
+    <div class="work-grid" id="workGrid">
+      <p class="mono" id="workStatus" style="color:var(--muted);font-size:13px;">carregando vídeos…</p>
     </div>
   </div>
 </section>
@@ -510,15 +479,86 @@
     });
   });
 
-  // work videos: pause others when one plays, toggle play-icon visibility
-  const clipVideos = document.querySelectorAll('.clip video');
-  clipVideos.forEach(v => {
-    v.addEventListener('play', () => {
-      v.closest('.clip').classList.add('playing');
-      clipVideos.forEach(other => { if (other !== v) other.pause(); });
+  // ---------- carregamento automático dos vídeos da pasta /videos ----------
+  const REPO_OWNER = 'adzzone48-spec';
+  const REPO_NAME  = 'site';
+  const REPO_BRANCH = 'main';
+
+  const workGrid = document.getElementById('workGrid');
+  const workStatus = document.getElementById('workStatus');
+
+  function fmtTime(sec){
+    if (!isFinite(sec)) return '--:--';
+    const m = Math.floor(sec/60), s = Math.floor(sec%60);
+    return m + ':' + String(s).padStart(2,'0');
+  }
+
+  function titleFromFilename(name){
+    const base = name.replace(/\.[^/.]+$/, '');
+    const clean = base.replace(/[_-]+/g, ' ').trim();
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  }
+
+  function buildClip(fileName){
+    const clip = document.createElement('div');
+    clip.className = 'clip';
+    clip.innerHTML = `
+      <div class="clip-thumb">
+        <video src="videos/${encodeURIComponent(fileName)}" preload="metadata" playsinline muted loop controls></video>
+        <div class="clip-dur mono">--:--</div>
+        <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
+      <div class="clip-info"><div class="clip-tag mono">VÍDEO</div><div class="clip-title">${titleFromFilename(fileName)}</div></div>
+    `;
+    const video = clip.querySelector('video');
+    const dur = clip.querySelector('.clip-dur');
+
+    // gera a miniatura automaticamente: pula pra ~1s assim que os metadados carregam,
+    // isso força o navegador a "pintar" aquele frame como se fosse o poster.
+    video.addEventListener('loadedmetadata', () => {
+      dur.textContent = fmtTime(video.duration);
+      try { video.currentTime = Math.min(1, (video.duration || 2) / 2); } catch(e) {}
     });
-    v.addEventListener('pause', () => v.closest('.clip').classList.remove('playing'));
-  });
+
+    return clip;
+  }
+
+  async function loadWorkVideos(){
+    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/videos?ref=${REPO_BRANCH}`;
+    try{
+      const res = await fetch(apiUrl);
+      if (!res.ok) throw new Error('API respondeu ' + res.status);
+      const files = await res.json();
+      const videos = files
+        .filter(f => f.type === 'file' && /\.(mp4|webm|mov)$/i.test(f.name))
+        .sort((a,b) => a.name.localeCompare(b.name, 'pt-BR', { numeric:true }));
+
+      workGrid.innerHTML = '';
+      if (videos.length === 0){
+        workGrid.innerHTML = '<p class="mono" style="color:var(--muted);font-size:13px;">Nenhum vídeo encontrado na pasta /videos ainda.</p>';
+        return;
+      }
+      videos.forEach(f => workGrid.appendChild(buildClip(f.name)));
+      attachClipVideoEvents();
+    } catch(err){
+      // fallback: se a API falhar (ex: offline, sem GitHub Pages ainda), avisa sem quebrar o site
+      workGrid.innerHTML = '<p class="mono" style="color:var(--muted);font-size:13px;">Não foi possível carregar os vídeos automaticamente. Confira se o site está publicado no GitHub Pages.</p>';
+      console.warn('Falha ao listar /videos via GitHub API:', err);
+    }
+  }
+
+  function attachClipVideoEvents(){
+    const clipVideos = document.querySelectorAll('.clip video');
+    clipVideos.forEach(v => {
+      v.addEventListener('play', () => {
+        v.closest('.clip').classList.add('playing');
+        clipVideos.forEach(other => { if (other !== v) other.pause(); });
+      });
+      v.addEventListener('pause', () => v.closest('.clip').classList.remove('playing'));
+    });
+  }
+
+  loadWorkVideos();
 </script>
 
 </body>
