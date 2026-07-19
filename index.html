@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -20,6 +20,16 @@
     --cyan: #00d9ff;
     --rec: #ff3b3b;
     --maxw: 1180px;
+    --nav-bg: rgba(11,12,15,.82);
+  }
+  html[data-theme="light"]{
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface-2: #edece6;
+    --line: #dcdad3;
+    --text: #14151a;
+    --muted: #5c6270;
+    --nav-bg: rgba(244,243,239,.86);
   }
 
   *,*::before,*::after{ box-sizing: border-box; }
@@ -37,6 +47,7 @@
     width: 100%;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background .25s, color .25s;
   }
 
   img,svg,video{ max-width: 100%; display:block; }
@@ -60,11 +71,12 @@
     opacity:.035; mix-blend-mode: overlay;
     background-image: repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px);
   }
+  html[data-theme="light"] .grain{ opacity:.02; mix-blend-mode: multiply; }
 
   /* ---------- timeline nav ---------- */
   .timeline-nav{
     position: fixed; top:0; left:0; right:0; z-index: 100;
-    background: rgba(11,12,15,.82);
+    background: var(--nav-bg);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
   }
@@ -102,7 +114,7 @@
     transition: left .08s linear;
   }
 
-  .tc-list{ display:flex; gap: clamp(10px,2.4vw,26px); flex-shrink:0; }
+  .tc-list{ display:flex; gap: clamp(8px,2vw,22px); flex-shrink:0; }
   .tc-item{
     font-family:'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
     display:flex; flex-direction:column; gap:2px; cursor:pointer;
@@ -113,13 +125,34 @@
   .tc-item.active{ color: var(--text); }
   .tc-item.active .code{ color: var(--cyan); opacity:1; }
 
+  .nav-controls{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .ctrl-btn{
+    width:30px;height:30px;border-radius:50%;border:1px solid var(--line);
+    background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;
+    cursor:pointer; transition:border-color .2s; flex-shrink:0;
+  }
+  .ctrl-btn:hover{ border-color: var(--cyan); }
+  .ctrl-btn svg{ width:16px;height:16px; }
+  .lang-switch{ display:flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; flex-shrink:0; }
+  .lang-btn{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.05em;
+    background:transparent; border:none; color:var(--muted); padding:7px 10px; cursor:pointer;
+    transition: background .2s, color .2s;
+  }
+  .lang-btn.active{ background:var(--text); color:var(--bg); }
+
   @media (max-width: 720px){
     .tc-item .label{ display:none; }
     .tc-item{ font-size:10px; }
-    .timeline-inner{ gap: 12px; }
+    .timeline-inner{ gap: 10px; }
   }
   @media (max-width: 480px){
     .rec span.mono{ display:none; }
+    .lang-btn{ padding:5px 8px; }
+  }
+  @media (max-width: 400px){
+    .timeline-track{ display:none; }
+    .timeline-inner{ gap:8px; }
   }
 
   /* ---------- hero ---------- */
@@ -261,7 +294,7 @@
   .clip-dur{
     position:absolute; top:10px; right:10px; z-index:3;
     font-family:'JetBrains Mono',monospace; font-size: 11px;
-    background: rgba(0,0,0,.55); padding: 3px 8px; border-radius:3px;
+    background: rgba(0,0,0,.55); color:#fff; padding: 3px 8px; border-radius:3px;
   }
   .play{
     z-index:3; width:52px; height:52px; border-radius:50%;
@@ -277,6 +310,19 @@
   .clip-info{ padding: 14px 16px 16px; }
   .clip-tag{ font-family:'JetBrains Mono',monospace; font-size:10px; color: var(--cyan); letter-spacing:.08em; margin-bottom:6px; }
   .clip-title{ font-size:15px; font-weight:600; }
+
+  /* ---------- testimonials ---------- */
+  .test-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  @media (max-width: 860px){ .test-grid{ grid-template-columns: 1fr; } }
+  .test-card{
+    background: var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding: 26px; display:flex; flex-direction:column; gap:18px; height:100%;
+  }
+  .test-stars{ color: var(--cyan); font-size:14px; letter-spacing:3px; }
+  .test-quote{ color: var(--text); font-size:15px; line-height:1.65; flex:1; }
+  .test-who{ border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:2px; }
+  .test-name{ font-weight:600; font-size:14px; }
+  .test-role{ font-family:'JetBrains Mono',monospace; font-size:11px; color: var(--muted); }
 
   /* ---------- contact ---------- */
   .contact{ background: var(--surface); border-top:1px solid var(--line); }
@@ -305,8 +351,6 @@
   .clink .ic svg{ width:18px; height:18px; }
   .clink .meta .k{ font-family:'JetBrains Mono',monospace; font-size:10px; color: var(--muted); letter-spacing:.1em; }
   .clink .meta .v{ font-size:14px; font-weight:600; margin-top:3px; }
-  .clink.static{ cursor:default; }
-  .clink.static:hover{ border-color: var(--line); transform:none; }
 
   /* ---------- footer ---------- */
   footer{
@@ -329,32 +373,43 @@
       <div class="playhead" id="playhead"></div>
     </div>
     <div class="tc-list">
-      <button class="tc-item active" data-target="#inicio"><span class="code">00:00</span><span class="label">INÍCIO</span></button>
-      <button class="tc-item" data-target="#sobre"><span class="code">00:08</span><span class="label">SOBRE</span></button>
-      <button class="tc-item" data-target="#trabalhos"><span class="code">00:16</span><span class="label">TRABALHOS</span></button>
-      <button class="tc-item" data-target="#contato"><span class="code">00:24</span><span class="label">CONTATO</span></button>
+      <button class="tc-item active" data-target="#inicio"><span class="code">00:00</span><span class="label" data-i18n="navHome">INÍCIO</span></button>
+      <button class="tc-item" data-target="#sobre"><span class="code">00:08</span><span class="label" data-i18n="navAbout">SOBRE</span></button>
+      <button class="tc-item" data-target="#trabalhos"><span class="code">00:16</span><span class="label" data-i18n="navWork">TRABALHOS</span></button>
+      <button class="tc-item" data-target="#depoimentos"><span class="code">00:24</span><span class="label" data-i18n="navTest">DEPOIMENTOS</span></button>
+      <button class="tc-item" data-target="#contato"><span class="code">00:32</span><span class="label" data-i18n="navContact">CONTATO</span></button>
+    </div>
+    <div class="nav-controls">
+      <button class="ctrl-btn" id="themeToggle" aria-label="Alternar tema" title="Alternar tema">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+      </button>
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="pt">PT</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
     </div>
   </div>
 </nav>
 
 <section class="hero" id="inicio">
   <div class="wrap">
-    <div class="eyebrow mono">PORTFÓLIO — 2026</div>
+    <div class="eyebrow mono" data-i18n="eyebrow">PORTFÓLIO — 2026</div>
     <h1 class="title" data-text="ADZZONE">
       ADZZONE
       <span class="glitch-r" aria-hidden="true">ADZZONE</span>
       <span class="glitch-c" aria-hidden="true">ADZZONE</span>
     </h1>
-    <div class="role">VIDEO MAKER<span class="dot"> ·</span> EDIÇÃO &amp; MOTION</div>
-    <p class="tagline">Transformo bruto em corte fino: edições que prendem atenção nos primeiros segundos, com ritmo, cor e movimento pensados pra redes sociais.</p>
+    <div class="role" data-i18n="role">VIDEO MAKER <span class="dot">·</span> EDIÇÃO &amp; MOTION</div>
+    <p class="tagline" data-i18n="tagline">Transformo bruto em corte fino: edições que prendem atenção nos primeiros segundos, com ritmo, cor e movimento pensados pra redes sociais.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="#trabalhos">▸ Ver trabalhos</a>
-      <a class="btn btn-ghost" href="#contato">Fale comigo</a>
+      <a class="btn btn-primary" href="#trabalhos" data-i18n="ctaWork">▸ Ver trabalhos</a>
+      <a class="btn btn-ghost" href="#contato" data-i18n="ctaContact">Fale comigo</a>
     </div>
     <div class="hero-foot">
-      <div class="stat"><div class="n">+50</div><div class="l mono">VÍDEOS EDITADOS</div></div>
-      <div class="stat"><div class="n">IG/TT</div><div class="l mono">FOCO EM SOCIAL</div></div>
-      <div class="stat"><div class="n">24H</div><div class="l mono">RESPOSTA RÁPIDA</div></div>
+      <div class="stat"><div class="n">+50</div><div class="l mono" data-i18n="stat1">VÍDEOS EDITADOS</div></div>
+      <div class="stat"><div class="n">IG/TT</div><div class="l mono" data-i18n="stat2">FOCO EM SOCIAL</div></div>
+      <div class="stat"><div class="n">24H</div><div class="l mono" data-i18n="stat3">RESPOSTA RÁPIDA</div></div>
     </div>
   </div>
 </section>
@@ -362,41 +417,41 @@
 <section class="about pad" id="sobre">
   <div class="wrap">
     <div class="sec-head">
-      <div class="sec-tc mono">00:08 — SOBRE</div>
-      <h2 class="sec-title">Quem edita</h2>
+      <div class="sec-tc mono" data-i18n="aboutTc">00:08 — SOBRE</div>
+      <h2 class="sec-title" data-i18n="aboutTitle">Quem edita</h2>
     </div>
     <div class="about-grid">
       <div class="about-text">
-        <p>Eu sou o <strong>Adz</strong>. Edito vídeo há um tempo suficiente pra saber que <strong>o corte certo no segundo certo</strong> é o que separa um vídeo esquecível de um que as pessoas assistem até o fim.</p>
-        <p>Trabalho principalmente com conteúdo pra <strong>Instagram e TikTok</strong>: reels dinâmicos, motion graphics e color grading que dão identidade visual pro seu conteúdo.</p>
-        <p>Se você tem material bruto e quer algo que realmente prenda a audiência, é só chamar.</p>
+        <p data-i18n="aboutP1">Eu sou o <strong>Adz</strong>. Edito vídeo há um tempo suficiente pra saber que <strong>o corte certo no segundo certo</strong> é o que separa um vídeo esquecível de um que as pessoas assistem até o fim.</p>
+        <p data-i18n="aboutP2">Trabalho principalmente com conteúdo pra <strong>Instagram e TikTok</strong>: reels dinâmicos, motion graphics e color grading que dão identidade visual pro seu conteúdo.</p>
+        <p data-i18n="aboutP3">Se você tem material bruto e quer algo que realmente prenda a audiência, é só chamar.</p>
       </div>
       <div class="tracks">
         <div class="track">
           <div class="track-id mono">V1</div>
           <div class="track-body">
-            <div class="track-name">Edição / Corte</div>
+            <div class="track-name" data-i18n="track1">Edição / Corte</div>
             <div class="track-wave"><i style="width:86%"></i></div>
           </div>
         </div>
         <div class="track">
           <div class="track-id mono">V2</div>
           <div class="track-body">
-            <div class="track-name">Motion Graphics</div>
+            <div class="track-name" data-i18n="track2">Motion Graphics</div>
             <div class="track-wave"><i style="width:70%"></i></div>
           </div>
         </div>
         <div class="track">
           <div class="track-id mono">COR</div>
           <div class="track-body">
-            <div class="track-name">Color Grading</div>
+            <div class="track-name" data-i18n="track3">Color Grading</div>
             <div class="track-wave"><i style="width:78%"></i></div>
           </div>
         </div>
         <div class="track">
           <div class="track-id mono">A1</div>
           <div class="track-body">
-            <div class="track-name">Sound Design</div>
+            <div class="track-name" data-i18n="track4">Sound Design</div>
             <div class="track-wave"><i style="width:64%"></i></div>
           </div>
         </div>
@@ -408,9 +463,9 @@
 <section class="pad" id="trabalhos">
   <div class="wrap">
     <div class="sec-head">
-      <div class="sec-tc mono">00:16 — TRABALHOS</div>
-      <h2 class="sec-title">Últimos cortes</h2>
-      <p class="sec-sub">Uma seleção de peças recentes — carregadas automaticamente da pasta <span class="mono" style="color:var(--cyan)">videos</span>.</p>
+      <div class="sec-tc mono" data-i18n="workTc">00:16 — TRABALHOS</div>
+      <h2 class="sec-title" data-i18n="workTitle">Últimos cortes</h2>
+      <p class="sec-sub" data-i18n="workSub">Uma seleção de peças recentes — carregadas automaticamente da pasta <span class="mono" style="color:var(--cyan)">videos</span>.</p>
     </div>
     <div class="work-grid" id="workGrid">
       <p class="mono" id="workStatus" style="color:var(--muted);font-size:13px;">carregando vídeos…</p>
@@ -418,11 +473,48 @@
   </div>
 </section>
 
+<!-- DEPOIMENTOS: troque os textos/nomes abaixo por feedback real de clientes assim que tiver -->
+<section class="pad testimonials" id="depoimentos">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-tc mono" data-i18n="testTc">00:24 — DEPOIMENTOS</div>
+      <h2 class="sec-title" data-i18n="testTitle">O que dizem</h2>
+      <p class="sec-sub" data-i18n="testSub">Feedback de quem já trabalhou comigo.</p>
+    </div>
+    <div class="test-grid">
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <div class="test-quote" data-i18n="test1q">"Editou meu clipe em menos de 24h e o resultado ficou melhor do que eu esperava."</div>
+        <div class="test-who">
+          <div class="test-name" data-i18n="test1n">L. Ferreira</div>
+          <div class="test-role mono" data-i18n="test1r">Criador de conteúdo</div>
+        </div>
+      </div>
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <div class="test-quote" data-i18n="test2q">"Ritmo, corte e cor no ponto certo. Recomendo pra quem quer vídeo com identidade."</div>
+        <div class="test-who">
+          <div class="test-name" data-i18n="test2n">B. Moraes</div>
+          <div class="test-role mono" data-i18n="test2r">Streamer</div>
+        </div>
+      </div>
+      <div class="test-card">
+        <div class="test-stars">★★★★★</div>
+        <div class="test-quote" data-i18n="test3q">"Comunicação rápida e entrega no prazo combinado. Virou editor fixo do canal."</div>
+        <div class="test-who">
+          <div class="test-name" data-i18n="test3n">R. Andrade</div>
+          <div class="test-role mono" data-i18n="test3r">Youtuber</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="contact pad" id="contato">
   <div class="wrap contact-inner">
-    <div class="sec-tc mono">00:24 — CONTATO</div>
-    <h2 class="contact-title">Vamos criar<br>juntos?</h2>
-    <p class="contact-sub">Manda uma mensagem e vamos colocar seu projeto no ritmo certo.</p>
+    <div class="sec-tc mono" data-i18n="contactTc">00:32 — CONTATO</div>
+    <h2 class="contact-title" data-i18n="contactTitle">Vamos criar<br>juntos?</h2>
+    <p class="contact-sub" data-i18n="contactSub">Manda uma mensagem e vamos colocar seu projeto no ritmo certo.</p>
     <div class="contact-links">
       <a class="clink" href="https://www.instagram.com/adzzoneeditor" target="_blank" rel="noopener">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></div>
@@ -434,22 +526,116 @@
       </a>
       <a class="clink" href="https://discord.gg/3tTeQ6MgPs" target="_blank" rel="noopener">
         <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 5.5A17 17 0 0 0 15.7 4l-.3.6a13 13 0 0 1 3.6 1.3A15.6 15.6 0 0 0 12 4.3 15.6 15.6 0 0 0 4.9 6a13 13 0 0 1 3.7-1.4L8.3 4A17 17 0 0 0 4 5.5C1.7 9 1 12.4 1.3 15.7A17 17 0 0 0 6.6 18l.7-1.1a11 11 0 0 1-1.7-.8l.4-.3a12.4 12.4 0 0 0 10 0l.4.3c-.5.3-1.1.6-1.7.8l.7 1.1a17 17 0 0 0 5.3-2.3c.4-3.6-.5-7-2.7-10.2ZM8.7 14.1c-.8 0-1.5-.8-1.5-1.7 0-1 .7-1.7 1.5-1.7s1.5.8 1.5 1.7c0 1-.7 1.7-1.5 1.7Zm6.6 0c-.8 0-1.5-.8-1.5-1.7 0-1 .7-1.7 1.5-1.7s1.5.8 1.5 1.7c0 1-.7 1.7-1.5 1.7Z"/></svg></div>
-        <div class="meta"><div class="k mono">DISCORD</div><div class="v">Entrar no servidor</div></div>
+        <div class="meta"><div class="k mono">DISCORD</div><div class="v" data-i18n="discordLabel">Entrar no servidor</div></div>
       </a>
     </div>
   </div>
 </section>
 
 <footer>
-  <span class="rec-dot" style="display:inline-block;vertical-align:middle;margin-right:6px;"></span>ADZZONE © 2026 — feito no ritmo certo
+  <span class="rec-dot" style="display:inline-block;vertical-align:middle;margin-right:6px;"></span><span data-i18n="footer">ADZZONE © 2026 — feito no ritmo certo</span>
 </footer>
 
 <script>
-  // scroll-linked timeline playhead
+  // ---------- tema claro/escuro ----------
+  const root = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  const iconSun = themeToggle.querySelector('.ic-sun');
+  const iconMoon = themeToggle.querySelector('.ic-moon');
+
+  function applyTheme(theme){
+    root.setAttribute('data-theme', theme);
+    iconSun.style.display = theme === 'dark' ? 'block' : 'none';
+    iconMoon.style.display = theme === 'light' ? 'block' : 'none';
+    localStorage.setItem('adzzone-theme', theme);
+  }
+  applyTheme(localStorage.getItem('adzzone-theme') || 'dark');
+  themeToggle.addEventListener('click', () => {
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  // ---------- idioma PT/EN ----------
+  const i18n = {
+    pt: {
+      eyebrow: 'PORTFÓLIO — 2026',
+      role: 'VIDEO MAKER <span class="dot">·</span> EDIÇÃO &amp; MOTION',
+      tagline: 'Transformo bruto em corte fino: edições que prendem atenção nos primeiros segundos, com ritmo, cor e movimento pensados pra redes sociais.',
+      ctaWork: '▸ Ver trabalhos',
+      ctaContact: 'Fale comigo',
+      stat1: 'VÍDEOS EDITADOS', stat2: 'FOCO EM SOCIAL', stat3: 'RESPOSTA RÁPIDA',
+      navHome: 'INÍCIO', navAbout: 'SOBRE', navWork: 'TRABALHOS', navTest: 'DEPOIMENTOS', navContact: 'CONTATO',
+      aboutTc: '00:08 — SOBRE', aboutTitle: 'Quem edita',
+      aboutP1: 'Eu sou o <strong>Adz</strong>. Edito vídeo há um tempo suficiente pra saber que <strong>o corte certo no segundo certo</strong> é o que separa um vídeo esquecível de um que as pessoas assistem até o fim.',
+      aboutP2: 'Trabalho principalmente com conteúdo pra <strong>Instagram e TikTok</strong>: reels dinâmicos, motion graphics e color grading que dão identidade visual pro seu conteúdo.',
+      aboutP3: 'Se você tem material bruto e quer algo que realmente prenda a audiência, é só chamar.',
+      track1: 'Edição / Corte', track2: 'Motion Graphics', track3: 'Color Grading', track4: 'Sound Design',
+      workTc: '00:16 — TRABALHOS', workTitle: 'Últimos cortes',
+      workSub: 'Uma seleção de peças recentes — carregadas automaticamente da pasta <span class="mono" style="color:var(--cyan)">videos</span>.',
+      workLoading: 'carregando vídeos…',
+      workEmpty: 'Nenhum vídeo encontrado na pasta /videos ainda.',
+      workError: 'Não foi possível carregar os vídeos automaticamente. Confira se o site está publicado no GitHub Pages.',
+      clipTag: 'VÍDEO',
+      testTc: '00:24 — DEPOIMENTOS', testTitle: 'O que dizem', testSub: 'Feedback de quem já trabalhou comigo.',
+      test1q: '"Editou meu clipe em menos de 24h e o resultado ficou melhor do que eu esperava."', test1n: 'L. Ferreira', test1r: 'Criador de conteúdo',
+      test2q: '"Ritmo, corte e cor no ponto certo. Recomendo pra quem quer vídeo com identidade."', test2n: 'B. Moraes', test2r: 'Streamer',
+      test3q: '"Comunicação rápida e entrega no prazo combinado. Virou editor fixo do canal."', test3n: 'R. Andrade', test3r: 'Youtuber',
+      contactTc: '00:32 — CONTATO', contactTitle: 'Vamos criar<br>juntos?',
+      contactSub: 'Manda uma mensagem e vamos colocar seu projeto no ritmo certo.',
+      discordLabel: 'Entrar no servidor',
+      footer: 'ADZZONE © 2026 — feito no ritmo certo'
+    },
+    en: {
+      eyebrow: 'PORTFOLIO — 2026',
+      role: 'VIDEO MAKER <span class="dot">·</span> EDITING &amp; MOTION',
+      tagline: 'I turn raw footage into a fine cut: edits that grab attention in the first seconds, with pacing, color and motion built for social media.',
+      ctaWork: '▸ See work',
+      ctaContact: 'Get in touch',
+      stat1: 'VIDEOS EDITED', stat2: 'SOCIAL FOCUSED', stat3: 'FAST RESPONSE',
+      navHome: 'HOME', navAbout: 'ABOUT', navWork: 'WORK', navTest: 'REVIEWS', navContact: 'CONTACT',
+      aboutTc: '00:08 — ABOUT', aboutTitle: 'Who edits',
+      aboutP1: 'I&rsquo;m Adz. I&rsquo;ve been editing video long enough to know that <strong>the right cut at the right second</strong> is what separates a forgettable video from one people watch till the end.',
+      aboutP2: 'I mainly work on content for <strong>Instagram and TikTok</strong>: dynamic reels, motion graphics and color grading that give your content a visual identity.',
+      aboutP3: 'If you&rsquo;ve got raw footage and want something that actually holds attention, just reach out.',
+      track1: 'Editing / Cutting', track2: 'Motion Graphics', track3: 'Color Grading', track4: 'Sound Design',
+      workTc: '00:16 — WORK', workTitle: 'Latest cuts',
+      workSub: 'A selection of recent pieces — loaded automatically from the <span class="mono" style="color:var(--cyan)">videos</span> folder.',
+      workLoading: 'loading videos…',
+      workEmpty: 'No videos found in /videos yet.',
+      workError: 'Could not load videos automatically. Check if the site is published on GitHub Pages.',
+      clipTag: 'VIDEO',
+      testTc: '00:24 — REVIEWS', testTitle: 'What people say', testSub: 'Feedback from people I have worked with.',
+      test1q: '"Edited my clip in under 24h and it turned out better than I expected."', test1n: 'L. Ferreira', test1r: 'Content creator',
+      test2q: '"Pacing, cuts and color right on point. Recommend it if you want video with identity."', test2n: 'B. Moraes', test2r: 'Streamer',
+      test3q: '"Fast communication and delivered on time. Became the channel&rsquo;s go-to editor."', test3n: 'R. Andrade', test3r: 'YouTuber',
+      contactTc: '00:32 — CONTACT', contactTitle: 'Let&rsquo;s create<br>together?',
+      contactSub: 'Send a message and let&rsquo;s put your project on the right beat.',
+      discordLabel: 'Join the server',
+      footer: 'ADZZONE © 2026 — made on beat'
+    }
+  };
+
+  let currentLang = localStorage.getItem('adzzone-lang') || 'pt';
+
+  function applyLang(lang){
+    const dict = i18n[lang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[key] !== undefined) el.innerHTML = dict[key];
+    });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    document.querySelectorAll('.clip-tag').forEach(t => t.textContent = dict.clipTag);
+    root.lang = lang === 'pt' ? 'pt-BR' : 'en';
+    localStorage.setItem('adzzone-lang', lang);
+    currentLang = lang;
+  }
+  document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+  applyLang(currentLang);
+
+  // ---------- timeline / scroll-linked nav ----------
   const fill = document.getElementById('fill');
   const playhead = document.getElementById('playhead');
   const items = document.querySelectorAll('.tc-item');
-  const sections = ['#inicio','#sobre','#trabalhos','#contato'].map(id => document.querySelector(id));
+  const sections = ['#inicio','#sobre','#trabalhos','#depoimentos','#contato'].map(id => document.querySelector(id));
 
   function onScroll(){
     const doc = document.documentElement;
@@ -485,7 +671,6 @@
   const REPO_BRANCH = 'main';
 
   const workGrid = document.getElementById('workGrid');
-  const workStatus = document.getElementById('workStatus');
 
   function fmtTime(sec){
     if (!isFinite(sec)) return '--:--';
@@ -508,13 +693,11 @@
         <div class="clip-dur mono">--:--</div>
         <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
       </div>
-      <div class="clip-info"><div class="clip-tag mono">VÍDEO</div><div class="clip-title">${titleFromFilename(fileName)}</div></div>
+      <div class="clip-info"><div class="clip-tag mono">${i18n[currentLang].clipTag}</div><div class="clip-title">${titleFromFilename(fileName)}</div></div>
     `;
     const video = clip.querySelector('video');
     const dur = clip.querySelector('.clip-dur');
 
-    // gera a miniatura automaticamente: pula pra ~1s assim que os metadados carregam,
-    // isso força o navegador a "pintar" aquele frame como se fosse o poster.
     video.addEventListener('loadedmetadata', () => {
       dur.textContent = fmtTime(video.duration);
       try { video.currentTime = Math.min(1, (video.duration || 2) / 2); } catch(e) {}
@@ -535,14 +718,13 @@
 
       workGrid.innerHTML = '';
       if (videos.length === 0){
-        workGrid.innerHTML = '<p class="mono" style="color:var(--muted);font-size:13px;">Nenhum vídeo encontrado na pasta /videos ainda.</p>';
+        workGrid.innerHTML = `<p class="mono" style="color:var(--muted);font-size:13px;">${i18n[currentLang].workEmpty}</p>`;
         return;
       }
       videos.forEach(f => workGrid.appendChild(buildClip(f.name)));
       attachClipVideoEvents();
     } catch(err){
-      // fallback: se a API falhar (ex: offline, sem GitHub Pages ainda), avisa sem quebrar o site
-      workGrid.innerHTML = '<p class="mono" style="color:var(--muted);font-size:13px;">Não foi possível carregar os vídeos automaticamente. Confira se o site está publicado no GitHub Pages.</p>';
+      workGrid.innerHTML = `<p class="mono" style="color:var(--muted);font-size:13px;">${i18n[currentLang].workError}</p>`;
       console.warn('Falha ao listar /videos via GitHub API:', err);
     }
   }
