@@ -782,34 +782,92 @@
     return clean.charAt(0).toUpperCase() + clean.slice(1);
   }
 
+  // Cria o card do clip, mas SEM colocar o vídeo pra carregar ainda.
+  // O src só é atribuído quando o card entra perto da viewport (ver setupLazyLoading).
+  // Isso evita estourar o limite de conexões simultâneas do navegador (~6 por domínio),
+  // que é o que travava a partir de ~20 vídeos carregando tudo de uma vez no load da página.
   function buildClip(fileName){
     const clip = document.createElement('div');
     clip.className = 'clip';
     clip.innerHTML = `
       <div class="clip-thumb">
-        <video src="videos/${encodeURIComponent(fileName)}" preload="metadata" playsinline muted loop controls></video>
+        <video data-src="videos/${encodeURIComponent(fileName)}" preload="none" playsinline muted loop controls></video>
         <div class="clip-dur mono">--:--</div>
         <div class="play"><svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
       </div>
       <div class="clip-info"><div class="clip-tag mono">${i18n[currentLang].clipTag}</div><div class="clip-title">${titleFromFilename(fileName)}</div></div>
     `;
-    const video = clip.querySelector('video');
-    const dur = clip.querySelector('.clip-dur');
+    return clip;
+  }
+
+  function loadClipVideo(video){
+    if (video.dataset.loaded) return;
+    video.dataset.loaded = '1';
+    const dur = video.closest('.clip-thumb').querySelector('.clip-dur');
 
     video.addEventListener('loadedmetadata', () => {
       dur.textContent = fmtTime(video.duration);
       try { video.currentTime = Math.min(1, (video.duration || 2) / 2); } catch(e) {}
     });
+    video.addEventListener('error', () => {
+      dur.textContent = '!';
+      console.warn('Falha ao carregar vídeo:', video.dataset.src);
+    });
 
-    return clip;
+    video.preload = 'metadata';
+    video.src = video.dataset.src;
+  }
+
+  // Observa os clips e só carrega o vídeo quando ele está perto de aparecer na tela.
+  // rootMargin dá uma folga de 400px pra já começar a carregar um pouco antes do usuário chegar lá.
+  function setupLazyLoading(){
+    const clipVideos = document.querySelectorAll('.clip video');
+
+    if (!('IntersectionObserver' in window)) {
+      // fallback: sem suporte a IntersectionObserver, carrega tudo (raro em navegadores atuais)
+      clipVideos.forEach(loadClipVideo);
+      attachClipVideoEvents();
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadClipVideo(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '400px 0px', threshold: 0.01 });
+
+    clipVideos.forEach(v => observer.observe(v));
+    attachClipVideoEvents();
+  }
+
+  async function fetchAllVideoFiles(){
+    // per_page=100 evita cair no limite padrão de 30 itens por página da API do GitHub.
+    // Também seguimos o header Link pra paginação, caso um dia passe de 100 vídeos.
+    const base = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/videos?ref=${REPO_BRANCH}&per_page=100`;
+    let url = base;
+    let all = [];
+
+    while (url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API respondeu ' + res.status);
+      const page = await res.json();
+      if (!Array.isArray(page)) throw new Error('Resposta inesperada da API');
+      all = all.concat(page);
+
+      const linkHeader = res.headers.get('Link');
+      const nextMatch = linkHeader && linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+      url = nextMatch ? nextMatch[1] : null;
+    }
+
+    return all;
   }
 
   async function loadWorkVideos(){
-    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/videos?ref=${REPO_BRANCH}`;
     try{
-      const res = await fetch(apiUrl);
-      if (!res.ok) throw new Error('API respondeu ' + res.status);
-      const files = await res.json();
+      const files = await fetchAllVideoFiles();
       const videos = files
         .filter(f => f.type === 'file' && /\.(mp4|webm|mov)$/i.test(f.name))
         .sort((a,b) => a.name.localeCompare(b.name, 'pt-BR', { numeric:true }));
@@ -820,7 +878,7 @@
         return;
       }
       videos.forEach(f => workGrid.appendChild(buildClip(f.name)));
-      attachClipVideoEvents();
+      setupLazyLoading();
     } catch(err){
       workGrid.innerHTML = `<p class="mono" style="color:var(--muted);font-size:13px;">${i18n[currentLang].workError}</p>`;
       console.warn('Falha ao listar /videos via GitHub API:', err);
